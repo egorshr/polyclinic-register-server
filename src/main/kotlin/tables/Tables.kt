@@ -3,6 +3,7 @@ package com.example.tables
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.kotlin.datetime.CurrentDate
 import org.jetbrains.exposed.sql.kotlin.datetime.date
+import org.jetbrains.exposed.sql.kotlin.datetime.datetime
 import org.jetbrains.exposed.sql.kotlin.datetime.time
 import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
 
@@ -51,7 +52,7 @@ object Visits : Table("visits") {
     val discountId = reference("discount_id", Discounts.id)
     val patientId = reference("patient_id", Patients.id)
     val employeeId = reference("employee_id", Employees.id)
-    val visitDateAndTime = timestamp("visit_date_and_time")
+    val visitDateAndTime = datetime("visit_date_and_time")
 
     override val primaryKey = PrimaryKey(id)
 }

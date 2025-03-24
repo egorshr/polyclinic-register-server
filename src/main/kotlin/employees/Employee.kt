@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Employee(
     val id: Int,
-    val specialityId: Int,
+    val speciality: Specialty,
     val firstName: String,
     val middleName: String?,
     val lastName: String,
@@ -19,4 +19,10 @@ data class Employee(
     val username: String,
     val email: String,
     val password: String
+)
+
+@Serializable
+data class Specialty(
+    val id: Int,
+    val name: String
 )
