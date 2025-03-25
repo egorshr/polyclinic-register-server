@@ -12,6 +12,7 @@ import io.ktor.server.application.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
+import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
@@ -35,8 +36,13 @@ fun Application.configureSerialization(
             put{
                 val service = call.receive<Service>()
                 serviceRepo.updateService(service)
+                val updatedService = serviceRepo.getAllServices().find { it.id == service.id }!!
+                call.respond(updatedService)
             }
-
+            delete("/{id}") {
+                val id = call.parameters["id"]!!.toInt()
+                serviceRepo.deleteService(id)
+            }
         }
 
         route("employees") {
@@ -47,6 +53,10 @@ fun Application.configureSerialization(
             put {
                 val employee = call.receive<Employee>()
                 employeeRepo.updateEmployee(employee)
+            }
+            delete("/{id}") {
+                val id = call.parameters["id"]!!.toInt()
+                employeeRepo.deleteEmployee(id)
             }
         }
 
@@ -59,6 +69,11 @@ fun Application.configureSerialization(
             put {
                 val visit = call.receive<Visit>()
                 visitRepo.updateVisit(visit)
+            }
+
+            delete("/{id}") {
+                val id = call.parameters["id"]!!.toInt()
+                visitRepo.deleteVisit(id)
             }
 
         }
