@@ -4,33 +4,45 @@ import com.example.employees.Employee
 import com.example.employees.Specialty
 import com.example.tables.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.datetime.Instant
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.update
 
 class VisitRepoImpl : VisitRepo {
 
     suspend fun <T> suspendTransaction(block: Transaction.() -> T): T =
         newSuspendedTransaction(Dispatchers.IO, statement = block)
 
-    override suspend fun getAllVisits(): List<Visit> = suspendTransaction {
-        Visits.selectAll().map { row ->
-            val discountId = row[Visits.discountId]
-            val discount = Discounts.select(Discounts.id, Discounts.discountPercent)
-                .where { Discounts.id eq discountId }
+    override suspend fun getAllVisits(startDate: Instant?, endDate: Instant?): List<Visit> = suspendTransaction {
+        val conditions = mutableListOf<Op<Boolean>>()
+
+        if (startDate != null) {
+            conditions += Visits.visitDateAndTime greaterEq startDate
+        }
+
+        if (endDate != null) {
+            conditions += Visits.visitDateAndTime lessEq endDate
+        }
+
+        Visits.selectAll().apply {
+            if (conditions.isNotEmpty()) {
+                adjustWhere { conditions.reduce { acc, op -> acc and op } }
+            }
+        }.map { row ->
+            val discount = Discounts.selectAll()
+                .where { Discounts.id eq row[Visits.discountId] }
                 .singleOrNull()?.let { discountRow ->
                     Discount(
                         id = discountRow[Discounts.id],
-                        percent = discountRow[Discounts.id]
+                        percent = discountRow[Discounts.discountPercent]
                     )
-                } ?: throw NoSuchElementException("Discount with id $discountId not found")
+                } ?: throw NoSuchElementException("Discount not found")
 
-            val patientId = row[Visits.patientId]
-            val patient = Patients.select(Patients.columns)
-                .where { Patients.id eq patientId }
+            val patient = Patients.selectAll()
+                .where { Patients.id eq row[Visits.patientId] }
                 .singleOrNull()?.let { patientRow ->
                     Patient(
                         id = patientRow[Patients.id],
@@ -51,25 +63,23 @@ class VisitRepoImpl : VisitRepo {
                         addressBody = patientRow[Patients.patientAddressBody],
                         addressApartment = patientRow[Patients.patientAddressApartment]
                     )
-                } ?: throw NoSuchElementException("Patient with id $patientId not found")
+                } ?: throw NoSuchElementException("Patient not found")
 
-            val employeeId = row[Visits.employeeId]
-            val employee = Employees.select(Employees.columns)
-                .where { Employees.id eq employeeId }
+            val employee = Employees.selectAll()
+                .where { Employees.id eq row[Visits.employeeId] }
                 .singleOrNull()?.let { employeeRow ->
-                    val specialityId = employeeRow[Employees.specialityId]
-                    val speciality = Specialties.select(Specialties.id, Specialties.specialityName)
-                        .where { Specialties.id eq specialityId }
+                    val specialty = Specialties.selectAll()
+                        .where { Specialties.id eq employeeRow[Employees.specialityId] }
                         .singleOrNull()?.let { specialityRow ->
                             Specialty(
                                 id = specialityRow[Specialties.id],
                                 name = specialityRow[Specialties.specialityName]
                             )
-                        } ?: throw NoSuchElementException("Specialty with id $specialityId not found")
+                        } ?: throw NoSuchElementException("Specialty not found")
 
                     Employee(
                         id = employeeRow[Employees.id],
-                        speciality = speciality,
+                        speciality = specialty,
                         firstName = employeeRow[Employees.employeeFirstName],
                         middleName = employeeRow[Employees.employeeMiddleName],
                         lastName = employeeRow[Employees.employeeLastName],
@@ -82,7 +92,7 @@ class VisitRepoImpl : VisitRepo {
                         email = employeeRow[Employees.employeeEmail],
                         password = employeeRow[Employees.employeePassword],
                     )
-                } ?: throw NoSuchElementException("Employee with id $employeeId not found")
+                } ?: throw NoSuchElementException("Employee not found")
 
             Visit(
                 id = row[Visits.id],
@@ -93,6 +103,7 @@ class VisitRepoImpl : VisitRepo {
             )
         }
     }
+
 
     override suspend fun updateVisit(visit: Visit): Unit = suspendTransaction {
         Visits.update({ Visits.id eq visit.id }) {

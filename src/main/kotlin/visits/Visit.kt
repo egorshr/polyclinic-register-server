@@ -15,13 +15,13 @@ data class Visit(
     val discount: Discount,
     val patient: Patient,
     val employee: Employee,
-    val dateAndTime: LocalDateTime
+    val dateAndTime: Instant
 )
 
 @Serializable
 data class Discount(
     val id: Int,
-    val percent: Int
+    val percent: Short
 )
 
 

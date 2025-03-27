@@ -18,6 +18,8 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import kotlinx.coroutines.flow.toList
+import kotlinx.datetime.Instant
 
 fun Application.configureSerialization(
     serviceRepo: ServiceRepo,
@@ -62,8 +64,21 @@ fun Application.configureSerialization(
 
         route("visits") {
             get {
-                val visits = visitRepo.getAllVisits()
-                call.respond(visits)
+                try {
+                    val startDateParam = call.request.queryParameters["startDate"]
+                    val endDateParam = call.request.queryParameters["endDate"]
+
+                    val startDate = startDateParam?.let { Instant.parse(it) }
+                    val endDate = endDateParam?.let { Instant.parse(it) }
+
+                    println("Received params: startDate=$startDateParam, endDate=$endDateParam")
+
+                    val visits = visitRepo.getAllVisits(startDate, endDate)
+                    call.respond(visits)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    call.respond(HttpStatusCode.InternalServerError, "Internal server error: ${e.localizedMessage}")
+                }
             }
 
             put {

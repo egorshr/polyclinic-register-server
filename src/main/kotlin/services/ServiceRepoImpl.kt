@@ -2,6 +2,9 @@ package com.example.services
 
 import com.example.tables.Services
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.flowOf
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.deleteWhere
@@ -16,13 +19,14 @@ class ServiceRepoImpl : ServiceRepo {
 
 
     override suspend fun getAllServices(): List<Service> = suspendTransaction {
-        Services.selectAll().map {
+          Services.selectAll().map {
             Service(
                 id = it[Services.id],
                 name = it[Services.serviceName],
                 price = it[Services.servicePrice].toDouble()
             )
         }
+
     }
 
     override suspend fun updateService(service: Service): Unit = suspendTransaction {
