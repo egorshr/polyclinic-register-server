@@ -105,8 +105,6 @@ fun Application.configureSerialization(
                     val startDate = startDateParam?.let { Instant.parse(it) }
                     val endDate = endDateParam?.let { Instant.parse(it) }
 
-                    println("Received params: startDate=$startDateParam, endDate=$endDateParam")
-
                     val visits = visitRepo.getAllVisits(startDate, endDate)
                     call.respond(visits)
                 } catch (e: Exception) {
