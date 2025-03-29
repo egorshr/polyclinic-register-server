@@ -6,7 +6,6 @@ import com.example.tables.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.datetime.Instant
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
@@ -107,17 +106,25 @@ class VisitRepoImpl : VisitRepo {
 
 
     override suspend fun updateVisit(visit: Visit): Unit = suspendTransaction {
-        Visits.update({ Visits.id eq visit.id }) {
-            it[Visits.discountId] = visit.discount.id
-            it[Visits.patientId] = visit.patient.id
-            it[Visits.employeeId] = visit.employee.id
-            it[Visits.visitDateAndTime] = visit.dateAndTime
+        try {
+            Visits.update({ Visits.id eq visit.id }) {
+                it[Visits.discountId] = visit.discount.id
+                it[Visits.patientId] = visit.patient.id
+                it[Visits.employeeId] = visit.employee.id
+                it[Visits.visitDateAndTime] = visit.dateAndTime
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
     override suspend fun deleteVisit(id: Set<Int>): Unit = suspendTransaction {
-        if (id.isNotEmpty()) {
-            Visits.deleteWhere { Visits.id inList id }
+        try {
+            if (id.isNotEmpty()) {
+                Visits.deleteWhere { Visits.id inList id }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 }

@@ -32,34 +32,67 @@ fun Application.configureSerialization(
     routing {
         route("services") {
             get {
-                val order = call.request.queryParameters["order"] ?: "asc"
-                val services = serviceRepo.getAllServices(order)
-                call.respond(services)
+                try {
+                    val order = call.request.queryParameters["order"] ?: "asc"
+                    val services = serviceRepo.getAllServices(order)
+                    call.respond(services)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    call.respond(HttpStatusCode.InternalServerError, "Internal server error: ${e.localizedMessage}")
+                }
             }
-            put{
-                val service = call.receive<Service>()
-                serviceRepo.updateService(service)
-                val updatedService = serviceRepo.getAllServices().find { it.id == service.id }!!
-                call.respond(updatedService)
+            put {
+                try {
+                    val service = call.receive<Service>()
+                    serviceRepo.updateService(service)
+                    val updatedService = serviceRepo.getAllServices().find { it.id == service.id }!!
+                    call.respond(updatedService)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    call.respond(HttpStatusCode.InternalServerError, "Internal server error: ${e.localizedMessage}")
+                }
             }
             delete("/{id}") {
-                val id = call.parameters["id"]!!.toInt()
-                serviceRepo.deleteService(id)
+                try {
+                    val id = call.parameters["id"]!!.toInt()
+                    serviceRepo.deleteService(id)
+                    call.respond(HttpStatusCode.OK)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    call.respond(HttpStatusCode.InternalServerError, "Internal server error: ${e.localizedMessage}")
+                }
             }
         }
 
         route("employees") {
             get {
-                val employees = employeeRepo.getAllEmployees()
-                call.respond(employees)
+                try {
+                    val employees = employeeRepo.getAllEmployees()
+                    call.respond(employees)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    call.respond(HttpStatusCode.InternalServerError, "Internal server error: ${e.localizedMessage}")
+                }
             }
             put {
-                val employee = call.receive<Employee>()
-                employeeRepo.updateEmployee(employee)
+                try {
+                    val employee = call.receive<Employee>()
+                    employeeRepo.updateEmployee(employee)
+                    call.respond(HttpStatusCode.OK)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    call.respond(HttpStatusCode.InternalServerError, "Internal server error: ${e.localizedMessage}")
+                }
             }
             delete("/{id}") {
-                val id = call.parameters["id"]!!.toInt()
-                employeeRepo.deleteEmployee(id)
+                try {
+                    val id = call.parameters["id"]!!.toInt()
+                    employeeRepo.deleteEmployee(id)
+                    call.respond(HttpStatusCode.OK)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    call.respond(HttpStatusCode.InternalServerError, "Internal server error: ${e.localizedMessage}")
+                }
             }
         }
 
@@ -83,16 +116,26 @@ fun Application.configureSerialization(
             }
 
             put {
-                val visit = call.receive<Visit>()
-                visitRepo.updateVisit(visit)
+                try {
+                    val visit = call.receive<Visit>()
+                    visitRepo.updateVisit(visit)
+                    call.respond(HttpStatusCode.OK)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    call.respond(HttpStatusCode.InternalServerError, "Internal server error: ${e.localizedMessage}")
+                }
             }
 
             delete("/{id}") {
-                val id = call.receive<Set<Int>>()
-                visitRepo.deleteVisit(id)
+                try {
+                    val id = call.receive<Set<Int>>()
+                    visitRepo.deleteVisit(id)
+                    call.respond(HttpStatusCode.OK)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    call.respond(HttpStatusCode.InternalServerError, "Internal server error: ${e.localizedMessage}")
+                }
             }
-
         }
     }
-
 }

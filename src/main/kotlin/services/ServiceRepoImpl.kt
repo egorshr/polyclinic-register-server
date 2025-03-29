@@ -29,14 +29,23 @@ class ServiceRepoImpl : ServiceRepo {
     }
 
     override suspend fun updateService(service: Service): Unit = suspendTransaction {
-        Services.update({ Services.id eq service.id }) {
-            it[Services.serviceName] = service.name
-            it[Services.servicePrice] = service.price.toBigDecimal()
+        try {
+            Services.update({ Services.id eq service.id }) {
+                it[Services.serviceName] = service.name
+                it[Services.servicePrice] = service.price.toBigDecimal()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
+
     }
 
     override suspend fun deleteService(id: Int): Unit = suspendTransaction {
-        Services.deleteWhere { Services.id eq id }
+        try {
+            Services.deleteWhere { Services.id eq id }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
 }
