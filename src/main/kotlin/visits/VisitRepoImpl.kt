@@ -8,6 +8,7 @@ import kotlinx.datetime.Instant
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
@@ -114,7 +115,9 @@ class VisitRepoImpl : VisitRepo {
         }
     }
 
-    override suspend fun deleteVisit(id: Int): Unit = suspendTransaction {
-        Visits.deleteWhere { Visits.id eq id }
+    override suspend fun deleteVisit(id: Set<Int>): Unit = suspendTransaction {
+        if (id.isNotEmpty()) {
+            Visits.deleteWhere { Visits.id inList id }
+        }
     }
 }

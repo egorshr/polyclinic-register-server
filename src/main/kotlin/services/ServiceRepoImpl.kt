@@ -2,15 +2,9 @@ package com.example.services
 
 import com.example.tables.Services
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.flowOf
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.update
 
 class ServiceRepoImpl : ServiceRepo {
 
@@ -18,15 +12,20 @@ class ServiceRepoImpl : ServiceRepo {
         newSuspendedTransaction(Dispatchers.IO, statement = block)
 
 
-    override suspend fun getAllServices(): List<Service> = suspendTransaction {
-          Services.selectAll().map {
-            Service(
-                id = it[Services.id],
-                name = it[Services.serviceName],
-                price = it[Services.servicePrice].toDouble()
-            )
+    override suspend fun getAllServices(order: String): List<Service> = suspendTransaction {
+        val sortOrder = when (order.lowercase()) {
+            "desc" -> SortOrder.DESC
+            else -> SortOrder.ASC
         }
-
+        Services.selectAll()
+            .orderBy(Services.servicePrice to sortOrder)
+            .map {
+                Service(
+                    id = it[Services.id],
+                    name = it[Services.serviceName],
+                    price = it[Services.servicePrice].toDouble()
+                )
+            }
     }
 
     override suspend fun updateService(service: Service): Unit = suspendTransaction {
@@ -36,7 +35,7 @@ class ServiceRepoImpl : ServiceRepo {
         }
     }
 
-    override suspend fun deleteService(id: Int): Unit = suspendTransaction{
+    override suspend fun deleteService(id: Int): Unit = suspendTransaction {
         Services.deleteWhere { Services.id eq id }
     }
 

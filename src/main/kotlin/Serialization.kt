@@ -32,7 +32,8 @@ fun Application.configureSerialization(
     routing {
         route("services") {
             get {
-                val services = serviceRepo.getAllServices()
+                val order = call.request.queryParameters["order"] ?: "asc"
+                val services = serviceRepo.getAllServices(order)
                 call.respond(services)
             }
             put{
@@ -87,7 +88,7 @@ fun Application.configureSerialization(
             }
 
             delete("/{id}") {
-                val id = call.parameters["id"]!!.toInt()
+                val id = call.receive<Set<Int>>()
                 visitRepo.deleteVisit(id)
             }
 
