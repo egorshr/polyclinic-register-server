@@ -5,6 +5,7 @@ import com.example.auth.model.User
 import com.example.tables.Users
 import com.example.util.UserRole
 import kotlinx.coroutines.Dispatchers
+import kotlinx.datetime.Clock
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
@@ -49,6 +50,7 @@ class AuthRepoImpl : AuthRepo {
                 it[firstName] = request.firstName
                 it[lastName] = request.lastName
                 it[role] = request.role.name
+                it[createdAt] = Clock.System.now()
             }[Users.id]
 
             User(

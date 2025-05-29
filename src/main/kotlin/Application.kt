@@ -1,7 +1,10 @@
 package com.example
 
+import com.example.auth.AuthRepoImpl
+import com.example.auth.AuthService
 import com.example.database.configureDatabases
 import com.example.employees.EmployeeRepoImpl
+import com.example.plugins.configureAuthentication
 import com.example.plugins.configureFrameworks
 import com.example.plugins.configureRouting
 import com.example.plugins.configureSerialization
@@ -17,8 +20,11 @@ fun Application.module() {
     val serviceRepo = ServiceRepoImpl()
     val employeeRepo = EmployeeRepoImpl()
     val visitRepo = VisitRepoImpl()
+    val authRepo = AuthRepoImpl()
+    val authService = AuthService(authRepo)
     configureSerialization()
     configureDatabases()
     configureFrameworks()
-    configureRouting(serviceRepo, employeeRepo, visitRepo)
+    configureAuthentication()
+    configureRouting(serviceRepo, employeeRepo, visitRepo, authService)
 }

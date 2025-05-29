@@ -4,12 +4,15 @@ import com.example.auth.model.LoginRequest
 import com.example.auth.model.RegisterRequest
 import com.example.util.getCurrentUser
 import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
 fun Route.authRoutes(authService: AuthService) {
     route("auth") {
+        // Публичные роуты (не требуют аутентификации)
         post("login") {
             try {
                 val request = call.receive<LoginRequest>()
@@ -39,13 +42,18 @@ fun Route.authRoutes(authService: AuthService) {
                 call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid request format"))
             }
         }
+    }
 
-        get("profile") {
-            val user = call.getCurrentUser()
-            if (user != null) {
-                call.respond(HttpStatusCode.OK, user)
-            } else {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Not authenticated"))
+    // Защищенный роут для профиля
+    authenticate("auth-jwt") {
+        route("auth") {
+            get("profile") {
+                val user = call.getCurrentUser()
+                if (user != null) {
+                    call.respond(HttpStatusCode.OK, user)
+                } else {
+                    call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Not authenticated"))
+                }
             }
         }
     }

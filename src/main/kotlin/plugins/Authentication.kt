@@ -11,20 +11,15 @@ import io.ktor.server.response.*
 fun Application.configureAuthentication() {
     install(Authentication) {
         jwt("auth-jwt") {
-            verifier { token ->
-                JwtConfig.verifyToken(token)?.let {
-                    JWTPrincipal(
-                        payload = JWT.decode(token)
-                    )
-                }
-            }
+            verifier(JwtConfig.getVerifier())
             validate { credential ->
-                val token = credential.payload.token
-                JwtConfig.verifyToken(token)?.let { userPrincipal ->
-                    UserIdPrincipal(userPrincipal.username)
+                if (credential.payload.getClaim("username").asString() != null) {
+                    JWTPrincipal(credential.payload)
+                } else {
+                    null
                 }
             }
-            challenge { _, _ ->
+            challenge { defaultScheme, realm ->
                 call.respond(HttpStatusCode.Unauthorized, "Token is not valid or has expired")
             }
         }
