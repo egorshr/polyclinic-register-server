@@ -11,7 +11,6 @@ class ServiceRepoImpl : ServiceRepo {
     suspend fun <T> suspendTransaction(block: Transaction.() -> T): T =
         newSuspendedTransaction(Dispatchers.IO, statement = block)
 
-
     override suspend fun getAllServices(order: String): List<Service> = suspendTransaction {
         val sortOrder = when (order.lowercase()) {
             "desc" -> SortOrder.DESC
@@ -28,6 +27,15 @@ class ServiceRepoImpl : ServiceRepo {
             }
     }
 
+    override suspend fun createService(service: Service): Service = suspendTransaction {
+        val id = Services.insert {
+            it[Services.serviceName] = service.name
+            it[Services.servicePrice] = service.price.toBigDecimal()
+        }[Services.id]
+
+        service.copy(id = id)
+    }
+
     override suspend fun updateService(service: Service): Unit = suspendTransaction {
         try {
             Services.update({ Services.id eq service.id }) {
@@ -37,7 +45,6 @@ class ServiceRepoImpl : ServiceRepo {
         } catch (e: Exception) {
             e.printStackTrace()
         }
-
     }
 
     override suspend fun deleteService(id: Int): Unit = suspendTransaction {
@@ -47,5 +54,4 @@ class ServiceRepoImpl : ServiceRepo {
             e.printStackTrace()
         }
     }
-
 }

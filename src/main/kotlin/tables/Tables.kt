@@ -99,3 +99,16 @@ object Schedules : Table("schedules") {
 
     override val primaryKey = PrimaryKey(id)
 }
+
+object Users : Table("users") {
+    val id = integer("user_id").autoIncrement()
+    val username = varchar("username", 100).uniqueIndex()
+    val email = varchar("email", 100).uniqueIndex()
+    val passwordHash = varchar("password_hash", 255)
+    val firstName = varchar("first_name", 50)
+    val lastName = varchar("last_name", 50)
+    val role = varchar("role", 20)
+    val createdAt = timestamp("created_at")
+
+    override val primaryKey = PrimaryKey(id)
+}
